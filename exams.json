@@ -1,0 +1,8 @@
+{
+  "exams": [
+    { "date": "2025-06-16", "title": "ACM CT", "syllabus": "Chapter 1 to 5" },
+    { "date": "2025-06-17", "title": "QM CT", "syllabus": "Unit 3 & 4" },
+    { "date": "2025-07-10", "title": "DSA Midterm", "syllabus": "Linked List, Trees, Sorting" },
+    { "date": "2025-08-05", "title": "AI Practical", "syllabus": "Lab 1-6" }
+  ]
+}
