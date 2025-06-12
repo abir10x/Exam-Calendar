@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AE-48 Exam Calendar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; background: linear-gradient(to right, #74ebd5, #ACB6E5); margin: 0; padding: 20px; position: relative; }
+    .header { text-align: center; font-size: 28px; margin-bottom: 20px; color: #333; }
+    .calendar-container, .admin-panel, .login-panel { background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); margin-bottom: 20px; }
+    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .month-nav button { padding: 5px 10px; border-radius: 5px; border: none; background: #007BFF; color: white; cursor: pointer; }
+    .admin-toggle { position: fixed; bottom: 20px; right: 20px; font-size: 14px; padding: 8px 12px; border-radius: 20px; background: #ff8800; color: white; border: none; cursor: pointer; z-index: 10; }
+    .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .day-name, .day { text-align: center; padding: 5px; border-radius: 5px; }
+    .day-name { background: #007BFF; color: #fff; font-weight: bold; }
+    .day { background: #f5f5f5; cursor: pointer; min-height: 30px; font-size: 12px; position: relative; }
+    .day:hover { background: #ddd; }
+    .empty { background: none; cursor: default; }
+    .exam-day { color: red; animation: blink 2s infinite; background: none; } /* Red text, slow blink, no background */
+    .today { background: #00bfff !important; color: #000; } /* Blue background for today */
+    .today.exam-day { color: red; animation: blink 2s infinite; } /* Red blinking text for today with exam */
+    @keyframes blink { 50% { opacity: 0.3; } } /* Slow blink animation */
+    input, textarea { width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; }
+    button.add-btn { background: #28a745; color: white; }
+    button.logout-btn { background: #ff3333; color: white; }
+    button.login-btn { background: #007BFF; color: white; }
+    .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
+    .modal-content { background: #fff; margin: 20% auto; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
+    .close { float: right; font-size: 24px; cursor: pointer; color: #aaa; }
+    .exam-list { margin-top: 20px; }
+    .exam-item { background: #eee; padding: 10px; border-radius: 5px; margin: 5px 0; }
+    .delete-btn { padding: 5px 10px; margin: 5px; border: none; border-radius: 5px; background: #ff3333; color: white; cursor: pointer; }
+    @media (max-width: 600px) { 
+      .calendar { font-size: 10px; gap: 1px; }
+      .day { min-height: 25px; padding: 3px; }
+      .admin-toggle { font-size: 12px; padding: 6px 10px; }
+    }
+  </style>
+</head>
+<body onload="initializeCalendar()">
+  <div class="header">AE-48 Exam Calendar</div>
+  <button class="admin-toggle" onclick="toggleAdmin()">Edit</button>
+
+  <div class="calendar-container">
+    <div class="calendar-header">
+      <div class="month-nav"><button onclick="prevMonth()">← Prev</button></div>
+      <h2 id="monthYear"></h2>
+      <div class="month-nav"><button onclick="nextMonth()">Next →</button></div>
+    </div>
+    <div class="calendar" id="calendar"></div>
+  </div>
+
+  <div class="admin-panel" id="adminPanel" style="display:none;">
+    <h3>Admin Panel - Manage Exams</h3>
+    <input type="date" id="examDate">
+    <input type="text" id="examTitle" placeholder="Exam Title">
+    <textarea id="examSyllabus" placeholder="Syllabus"></textarea>
+    <button class="add-btn" onclick="addExam()">Add Exam</button>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+
+    <div class="exam-list" id="examList"></div>
+  </div>
+
+  <div class="login-panel" id="loginPanel" style="display:none;">
+    <h3>Admin Login</h3>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button class="login-btn" onclick="login()">Login</button>
+  </div>
+
+  <div id="examModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">×</span>
+      <h3 id="modalTitle"></h3>
+      <p id="modalSyllabus"></p>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-auth-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCNezg1OC1gzCnFIX3VPV5hh_3dmgM1xug",
+      authDomain: "exam-calendar-441be.firebaseapp.com",
+      projectId: "exam-calendar-441be",
+      storageBucket: "exam-calendar-441be.appspot.com",
+      messagingSenderId: "961404705533",
+      appId: "1:961404705533:web:cc96e79b663cf91bafbc94",
+      measurementId: "G-ZKPLR2M9M2"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    let currentDate = new Date();
+    let exams = {};
+
+    function initializeCalendar() {
+      renderCalendar();
+      renderExamList();
+      loadExams();
+    }
+
+    auth.onAuthStateChanged(user => {
+      document.getElementById("adminPanel").style.display = user ? "block" : "none";
+      document.getElementById("loginPanel").style.display = user ? "none" : "block";
+      renderExamList();
+    });
+
+    function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.signInWithEmailAndPassword(email, password).catch(err => alert(err.message));
+    }
+
+    function logout() { auth.signOut(); }
+
+    function loadExams() {
+      db.collection("exams").onSnapshot(snapshot => {
+        exams = {};
+        snapshot.forEach(doc => { exams[doc.id] = doc.data(); });
+        renderCalendar();
+        renderExamList();
+      });
+    }
+
+    function addExam() {
+      const date = document.getElementById("examDate").value;
+      const title = document.getElementById("examTitle").value;
+      const syllabus = document.getElementById("examSyllabus").value;
+      if (!date || !title || !syllabus) { alert("Fill all fields."); return; }
+      db.collection("exams").doc(date).set({ date, title, syllabus }).then(() => {
+        document.getElementById("examDate").value = '';
+        document.getElementById("examTitle").value = '';
+        document.getElementById("examSyllabus").value = '';
+      });
+    }
+
+    function deleteExam(date) {
+      if (confirm("Are you sure?")) db.collection("exams").doc(date).delete();
+    }
+
+    function renderExamList() {
+      const examList = document.getElementById("examList");
+      examList.innerHTML = "";
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+
+      Object.values(exams).filter(e => e.date.startsWith(`${year}-${month}`)).forEach(e => {
+        const div = document.createElement("div");
+        div.className = "exam-item";
+        div.innerHTML = `<b>${e.date}:</b> ${e.title}<br>Syllabus: ${e.syllabus}
+                         <button class="delete-btn" onclick="deleteExam('${e.date}')">Delete</button>`;
+        examList.appendChild(div);
+      });
+    }
+
+    function renderCalendar() {
+      const calendar = document.getElementById("calendar");
+      const monthYear = document.getElementById("monthYear");
+      calendar.innerHTML = "";
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      monthYear.innerText = `${currentDate.toLocaleString('default', { month: 'long' })} ${year}`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+      days.forEach(d => {
+        const div = document.createElement("div");
+        div.className = "day-name";
+        div.innerText = d;
+        calendar.appendChild(div);
+      });
+
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement("div");
+        empty.className = "day empty";
+        calendar.appendChild(empty);
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const div = document.createElement("div");
+        div.className = "day";
+        div.innerText = d;
+
+        // Check if the date has an exam
+        if (exams[dateStr]) div.classList.add("exam-day");
+        // Check if it's today
+        if (new Date().toDateString() === new Date(year, month, d).toDateString()) {
+          div.classList.add("today");
+          if (exams[dateStr]) div.classList.add("exam-day"); // Add exam-day class for today with exam
+        }
+
+        div.onclick = () => openModal(dateStr);
+        calendar.appendChild(div);
+      }
+    }
+
+    function openModal(date) {
+      if (!exams[date]) return;
+      document.getElementById("modalTitle").innerText = exams[date].title;
+      document.getElementById("modalSyllabus").innerText = exams[date].syllabus;
+      document.getElementById("examModal").style.display = "block";
+    }
+
+    function closeModal() {
+      document.getElementById("examModal").style.display = "none";
+    }
+
+    function prevMonth() {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+      renderCalendar();
+      renderExamList();
+    }
+
+    function nextMonth() {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+      renderCalendar();
+      renderExamList();
+    }
+
+    function toggleAdmin() {
+      const adminPanel = document.getElementById("adminPanel");
+      const loginPanel = document.getElementById("loginPanel");
+      if (adminPanel.style.display === "block") {
+        adminPanel.style.display = "none";
+        loginPanel.style.display = "none";
+      } else {
+        auth.currentUser ? (adminPanel.style.display = "block") : (loginPanel.style.display = "block");
+      }
+    }
+  </script>
+</body>
+</html>
