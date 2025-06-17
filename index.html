@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AE-48 Exam Calendar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body { 
+      font-family: 'Poppins', sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background-attachment: fixed;
+      margin: 0; 
+      padding: 20px; 
+      position: relative;
+      min-height: 100vh;
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    .header { 
+      text-align: center; 
+      font-size: 32px; 
+      margin-bottom: 30px; 
+      color: #fff;
+      font-weight: 700;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      animation: slideInDown 0.8s ease-out;
+    }
+    
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    .calendar-container, .admin-panel, .login-panel { 
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 30px; 
+      border-radius: 25px; 
+      box-shadow: 
+        0 20px 40px rgba(0,0,0,0.1),
+        0 15px 25px rgba(0,0,0,0.05),
+        inset 0 1px 0 rgba(255,255,255,0.9);
+      margin-bottom: 25px;
+      border: 1px solid rgba(255,255,255,0.2);
+      animation: fadeInUp 0.6s ease-out;
+      transition: all 0.3s ease;
+    }
+    
+    .calendar-container:hover, .admin-panel:hover, .login-panel:hover {
+      transform: translateY(-2px);
+      box-shadow: 
+        0 25px 50px rgba(0,0,0,0.15),
+        0 20px 30px rgba(0,0,0,0.08),
+        inset 0 1px 0 rgba(255,255,255,0.9);
+    }
+    
+    .calendar-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 20px;
+    }
+    
+    .calendar-header h2 {
+      font-size: 19px;
+      font-weight: 700;
+      color: #4a5568;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .month-nav button { 
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: none; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white; 
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 10px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    
+    .month-nav button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    }
+    
+    .month-nav button:active {
+      transform: translateY(0);
+    }
+    
+    .admin-toggle { 
+      position: fixed; 
+      bottom: 30px; 
+      right: 30px; 
+      font-size: 16px; 
+      padding: 15px 25px; 
+      border-radius: 30px; 
+      background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+      color: white; 
+      border: none; 
+      cursor: pointer; 
+      z-index: 10;
+      font-weight: 600;
+      box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+      transition: all 0.3s ease;
+      animation: scaleIn 0.5s ease-out 0.8s both;
+    }
+    
+    .admin-toggle:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 12px 35px rgba(255, 107, 107, 0.6);
+    }
+    
+    .calendar { 
+      display: grid; 
+      grid-template-columns: repeat(7, 1fr); 
+      gap: 8px;
+      animation: fadeInUp 0.8s ease-out 0.2s both;
+    }
+    
+    .day-name, .day { 
+      text-align: center; 
+      padding: 15px 5px; 
+      border-radius: 15px;
+      transition: all 0.3s ease;
+    }
+    
+    .day-name { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff; 
+      font-weight: 700;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .day { 
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      cursor: pointer; 
+      min-height: 50px; 
+      font-size: 16px; 
+      font-weight: 600; 
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #4a5568;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .day:hover { 
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    
+    .empty { 
+      background: none; 
+      cursor: default;
+      box-shadow: none;
+    }
+    
+    .empty:hover {
+      background: none;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .exam-day { 
+      background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%) !important;
+      color: white !important;
+      font-weight: 900; 
+      border: 3px solid #ff4757;
+      position: relative;
+      animation: pulse 2s infinite;
+    }
+    
+    .exam-day::before {
+      content: '📝';
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      font-size: 12px;
+      background: red;
+      border-radius: 60%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    
+    /* New styles for exam count indicator */
+    .exam-count {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: #ff4757;
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      z-index: 2;
+    }
+    
+    .exam-day .exam-count {
+      background: #fff;
+      color: #ff4757;
+    }
+    
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); }
+    }
+    
+    .today { 
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%) !important;
+      color: #2d3748 !important; 
+      border: 3px solid #f1c40f !important;
+      font-weight: 900;
+      position: relative;
+    }
+    
+    .today::after {
+      content: 'TODAY';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 8px;
+      background: #2d3748;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    
+    .today.exam-day { 
+      background: linear-gradient(135deg, #ff6b6b 0%, #ffd700 100%) !important;
+      color: white !important; 
+      font-weight: 900; 
+      border: 3px solid #ff4757 !important;
+    }
+    
+    input, textarea { 
+      width: 100%; 
+      padding: 15px 20px; 
+      margin: 10px 0; 
+      border-radius: 15px; 
+      border: 2px solid #e2e8f0;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(10px);
+    }
+    
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      background: rgba(255,255,255,0.95);
+    }
+    
+    button {
+      padding: 15px 25px;
+      border: none;
+      border-radius: 15px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 5px;
+    }
+    
+    button.add-btn { 
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4); 
+    }
+    
+    button.add-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(72, 187, 120, 0.6);
+    }
+    
+    button.logout-btn { 
+      background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(245, 101, 101, 0.4);
+    }
+    
+    button.logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(245, 101, 101, 0.6);
+    }
+    
+    button.login-btn { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    button.login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    }
+    
+    .modal { 
+      display: none; 
+      position: fixed; 
+      z-index: 1000; 
+      left: 0; 
+      top: 0; 
+      width: 100%; 
+      height: 100%; 
+      background-color: rgba(0,0,0,0.6);
+      backdrop-filter: blur(5px);
+      animation: fadeIn 0.3s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .modal-content { 
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      margin: 10% auto; 
+      padding: 30px; 
+      border-radius: 25px; 
+      width: 90%; 
+      max-width: 500px; 
+      text-align: center;
+      box-shadow: 
+        0 25px 50px rgba(0,0,0,0.25),
+        0 15px 25px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      animation: slideInScale 0.4s ease-out;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    @keyframes slideInScale {
+      from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    
+    .close { 
+      float: right; 
+      font-size: 28px; 
+      cursor: pointer; 
+      color: #a0aec0;
+      transition: all 0.3s ease;
+      width: 35px;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+    
+    .close:hover {
+      color: #f56565;
+      background: rgba(245, 101, 101, 0.1);
+    }
+    
+    .exam-list { 
+      margin-top: 25px;
+      animation: fadeInUp 0.6s ease-out 0.3s both;
+    }
+    
+    .exam-item { 
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      padding: 20px; 
+      border-radius: 15px; 
+      margin: 15px 0;
+      border-left: 5px solid #667eea;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      transition: all 0.3s ease;
+    }
+    
+    .exam-item:hover {
+      transform: translateX(5px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .delete-btn, .edit-btn { 
+      padding: 8px 15px; 
+      margin: 8px 5px; 
+      border: none; 
+      border-radius: 10px; 
+      color: white; 
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .delete-btn { 
+      background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+      box-shadow: 0 2px 8px rgba(245, 101, 101, 0.3);
+    }
+    
+    .delete-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(245, 101, 101, 0.5);
+    }
+    
+    .edit-btn { 
+      background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+      box-shadow: 0 2px 8px rgba(237, 137, 54, 0.3);
+    }
+    
+    .edit-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(237, 137, 54, 0.5);
+    }
+    
+    .admin-panel h3, .login-panel h3 {
+      color: #4a5568;
+      margin-bottom: 20px;
+      font-size: 22px;
+      font-weight: 700;
+    }
+    
+    #modalTitle {
+      color: #2d3748;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+    
+    .modal-exam-item {
+      background: rgba(102, 126, 234, 0.05);
+      padding: 20px;
+      border-radius: 15px;
+      border-left: 4px solid #667eea;
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    
+    .modal-exam-title {
+      font-weight: 700;
+      font-size: 18px;
+      color: #2d3748;
+      margin-bottom: 10px;
+    }
+    
+    .modal-exam-syllabus {
+      color: #4a5568;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    @media (max-width: 600px) { 
+      .calendar { 
+        font-size: 12px; 
+        gap: 4px; 
+      }
+      .day { 
+        min-height: 40px; 
+        padding: 8px 3px;
+        font-size: 14px;
+      }
+      .day-name {
+        padding: 10px 3px;
+        font-size: 12px;
+      }
+      .admin-toggle { 
+        font-size: 14px; 
+        padding: 12px 20px; 
+        bottom: 20px; 
+        right: 20px; 
+      }
+      .header {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+      .calendar-container, .admin-panel, .login-panel {
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      .exam-day::before {
+        font-size: 10px;
+        width: 16px;
+        height: 16px;
+      }
+      .today::after {
+        font-size: 7px;
+        padding: 1px 4px;
+      }
+      .exam-count {
+        width: 14px;
+        height: 14px;
+        font-size: 8px;
+        top: 1px;
+        right: 1px;
+      }
+    }
+  </style>
+</head>
+<body onload="initializeCalendar()">
+  <div class="header">AE-48 Exam Calendar</div>
+  <button class="admin-toggle" onclick="toggleAdmin()">Edit</button>
+
+  <div class="calendar-container">
+    <div class="calendar-header">
+      <div class="month-nav"><button onclick="prevMonth()">← Prev</button></div>
+      <h2 id="monthYear"></h2>
+      <div class="month-nav"><button onclick="nextMonth()">Next →</button></div>
+    </div>
+    <div class="calendar" id="calendar"></div>
+  </div>
+
+  <div class="admin-panel" id="adminPanel" style="display:none;">
+    <h3>Admin Panel - Manage Exams</h3>
+    <input type="date" id="examDate">
+    <input type="text" id="examTitle" placeholder="Exam Title">
+    <textarea id="examSyllabus" placeholder="Syllabus"></textarea>
+    <button class="add-btn" id="formButton" onclick="handleFormSubmit()">Add Exam</button>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+
+    <div class="exam-list" id="examList"></div>
+  </div>
+
+  <div class="login-panel" id="loginPanel" style="display:none;">
+    <h3>Admin Login</h3>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button class="login-btn" onclick="login()">Login</button>
+  </div>
+
+  <div id="examModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">×</span>
+      <h3 id="modalTitle"></h3>
+      <div id="modalExamsList"></div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-auth-compat.js"></script>
+
+  <script>
+    // Initialize variables first
+    let currentDate = new Date();
+    let exams = {}; // Changed structure: date -> array of exams
+    let editingExamId = null;
+    let db, auth;
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCNezg1OC1gzCnFIX3VPV5hh_3dmgM1xug",
+      authDomain: "exam-calendar-441be.firebaseapp.com",
+      projectId: "exam-calendar-441be",
+      storageBucket: "exam-calendar-441be.appspot.com",
+      messagingSenderId: "961404705533",
+      appId: "1:961404705533:web:cc96e79b663cf91bafbc94",
+      measurementId: "G-ZKPLR2M9M2"
+    };
+
+    // Initialize Firebase when scripts are loaded
+    function initializeFirebase() {
+      try {
+        if (typeof firebase !== 'undefined') {
+          firebase.initializeApp(firebaseConfig);
+          db = firebase.firestore();
+          auth = firebase.auth();
+          
+          // Set up auth state listener
+          auth.onAuthStateChanged(user => {
+            if (user) {
+              document.getElementById("adminPanel").style.display = "block";
+              document.getElementById("loginPanel").style.display = "none";
+            } else {
+              document.getElementById("adminPanel").style.display = "none";
+              document.getElementById("loginPanel").style.display = "none";
+            }
+            renderExamList();
+          });
+          
+          // Load exams after Firebase is ready
+          loadExams();
+        } else {
+          console.error('Firebase not loaded');
+        }
+      } catch (error) {
+        console.error('Firebase initialization error:', error);
+      }
+    }
+
+    function initializeCalendar() {
+      renderCalendar();
+      renderExamList();
+      // Initialize Firebase after DOM is ready
+      initializeFirebase();
+    }
+
+    function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      if (auth) {
+        auth.signInWithEmailAndPassword(email, password).catch(err => alert(err.message));
+      } else {
+        alert('Authentication service not ready. Please try again.');
+      }
+    }
+
+    function logout() { 
+      if (auth) {
+        auth.signOut(); 
+      }
+    }
+
+    function loadExams() {
+      if (db) {
+        db.collection("exams").onSnapshot(snapshot => {
+          exams = {};
+          snapshot.forEach(doc => { 
+            const examData = doc.data();
+            const date = examData.date;
+            
+            // Initialize array for date if it doesn't exist
+            if (!exams[date]) {
+              exams[date] = [];
+            }
+            
+            // Add exam with its document ID
+            exams[date].push({
+              id: doc.id,
+              ...examData
+            });
+          });
+          renderCalendar();
+          renderExamList();
+        });
+      }
+    }
+
+    function generateExamId() {
+      return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    }
+
+    function handleFormSubmit() {
+      const date = document.getElementById("examDate").value;
+      const title = document.getElementById("examTitle").value;
+      const syllabus = document.getElementById("examSyllabus").value;
+      if (!date || !title || !syllabus) { 
+        alert("Fill all fields."); 
+        return; 
+      }
+
+      if (!db) {
+        alert('Database service not ready. Please try again.');
+        return;
+      }
+
+      const examData = { date, title, syllabus };
+
+      if (editingExamId) {
+        // Update existing exam
+        db.collection("exams").doc(editingExamId).update(examData).then(() => {
+          document.getElementById("examDate").value = '';
+          document.getElementById("examTitle").value = '';
+          document.getElementById("examSyllabus").value = '';
+          alert("Exam updated successfully!");
+          resetForm();
+        }).catch(err => alert(err.message));
+      } else {
+        // Add new exam with generated ID
+        const examId = generateExamId();
+        db.collection("exams").doc(examId).set(examData).then(() => {
+          document.getElementById("examDate").value = '';
+          document.getElementById("examTitle").value = '';
+          document.getElementById("examSyllabus").value = '';
+          alert("Exam added successfully!");
+        }).catch(err => alert(err.message));
+      }
+    }
+
+    function editExam(examId) {
+      // Find the exam by ID across all dates
+      let examToEdit = null;
+      for (const date in exams) {
+        const exam = exams[date].find(e => e.id === examId);
+        if (exam) {
+          examToEdit = exam;
+          break;
+        }
+      }
+
+      if (!examToEdit) return;
+
+      editingExamId = examId;
+      document.getElementById("examDate").value = examToEdit.date;
+      document.getElementById("examTitle").value = examToEdit.title;
+      document.getElementById("examSyllabus").value = examToEdit.syllabus;
+      const formButton = document.getElementById("formButton");
+      formButton.innerText = "Update Exam";
+    }
+
+    function resetForm() {
+      editingExamId = null;
+      const formButton = document.getElementById("formButton");
+      formButton.innerText = "Add Exam";
+      document.getElementById("examDate").value = '';
+      document.getElementById("examTitle").value = '';
+      document.getElementById("examSyllabus").value = '';
+    }
+
+    function deleteExam(examId) {
+      if (confirm("Are you sure you want to delete this exam?")) {
+        if (db) {
+          db.collection("exams").doc(examId).delete().then(() => {
+            alert("Exam deleted successfully!");
+          }).catch(err => alert(err.message));
+        } else {
+          alert('Database service not ready. Please try again.');
+        }
+      }
+    }
+
+    function renderExamList() {
+      const examList = document.getElementById("examList");
+      examList.innerHTML = "";
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+
+      // Get all exams for current month and sort by date
+      const monthExams = [];
+      for (const date in exams) {
+        if (date.startsWith(`${year}-${month}`)) {
+          exams[date].forEach(exam => {
+            monthExams.push(exam);
+          });
+        }
+      }
+
+      monthExams.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      monthExams.forEach(exam => {
+        const div = document.createElement("div");
+        div.className = "exam-item";
+        div.innerHTML = `
+          <b>${exam.date}:</b> ${exam.title}<br>
+          <small>Syllabus: ${exam.syllabus}</small><br>
+          <button class="edit-btn" onclick="editExam('${exam.id}')">Edit</button>
+          <button class="delete-btn" onclick="deleteExam('${exam.id}')">Delete</button>
+        `;
+        examList.appendChild(div);
+      });
+
+      if (monthExams.length === 0) {
+        examList.innerHTML = "<p style='text-align: center; color: #666; font-style: italic;'>No exams scheduled for this month.</p>";
+      }
+    }
+
+    function renderCalendar() {
+      const calendar = document.getElementById("calendar");
+      const monthYear = document.getElementById("monthYear");
+      calendar.innerHTML = "";
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      monthYear.innerText = `${currentDate.toLocaleString('default', { month: 'long' })} ${year}`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+      days.forEach(d => {
+        const div = document.createElement("div");
+        div.className = "day-name";
+        div.innerText = d;
+        calendar.appendChild(div);
+      });
+
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement("div");
+        empty.className = "day empty";
+        calendar.appendChild(empty);
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const div = document.createElement("div");
+        div.className = "day";
+        div.innerText = d;
+
+        // Check if there are exams on this date
+        const dayExams = exams[dateStr] || [];
+        if (dayExams.length > 0) {
+          div.classList.add("exam-day");
+          
+          // Add exam count indicator if more than 1 exam
+          if (dayExams.length > 1) {
+            const countSpan = document.createElement("span");
+            countSpan.className = "exam-count";
+            countSpan.innerText = dayExams.length;
+            div.appendChild(countSpan);
+          }
+        }
+
+        // Check if it's today
+        if (new Date().toDateString() === new Date(year, month, d).toDateString()) {
+          div.classList.add("today");
+        }
+
+        div.onclick = () => openModal(dateStr);
+        calendar.appendChild(div);
+      }
+    }
+
+    function openModal(date) {
+      const dayExams = exams[date] || [];
+      if (dayExams.length === 0) return;
+
+      const modalTitle = document.getElementById("modalTitle");
+      const modalExamsList = document.getElementById("modalExamsList");
+      
+      modalTitle.innerText = `Exams on ${formatDate(date)}`;
+      modalExamsList.innerHTML = "";
+
+      dayExams.forEach(exam => {
+        const examDiv = document.createElement("div");
+        examDiv.className = "modal-exam-item";
+        examDiv.innerHTML = `
+          <div class="modal-exam-title">${exam.title}</div>
+          <div class="modal-exam-syllabus">${exam.syllabus}</div>
+        `;
+        modalExamsList.appendChild(examDiv);
+      });
+
+      document.getElementById("examModal").style.display = "block";
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr + 'T00:00:00');
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    }
+
+    function closeModal() {
+      document.getElementById("examModal").style.display = "none";
+    }
+
+    function prevMonth() {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+      renderCalendar();
+      renderExamList();
+    }
+
+    function nextMonth() {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+      renderCalendar();
+      renderExamList();
+    }
+
+    function toggleAdmin() {
+      const adminPanel = document.getElementById("adminPanel");
+      const loginPanel = document.getElementById("loginPanel");
+      if (adminPanel.style.display === "block" || loginPanel.style.display === "block") {
+        adminPanel.style.display = "none";
+        loginPanel.style.display = "none";
+      } else {
+        if (auth && auth.currentUser) {
+          adminPanel.style.display = "block";
+        } else {
+          loginPanel.style.display = "block";
+        }
+      }
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+      const modal = document.getElementById("examModal");
+      if (event.target === modal) {
+        closeModal();
+      }
+    }
+  </script>
+</body>
+</html>
+
