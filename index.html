@@ -620,20 +620,50 @@
         right: 1px;
       }
       .exam-banner {
-  background: linear-gradient(135deg, #92400e 0%, #d97706 100%);
+  background: linear-gradient(135deg, #1a0000 0%, #7f0000 50%, #1a0000 100%);
+  background-size: 200% 200%;
+  animation: bannerShift 3s ease infinite, fadeInUp 0.6s ease-out;
   color: white;
   text-align: center;
-  padding: 12px 20px;
+  padding: 14px 20px;
   border-radius: 15px;
   margin-bottom: 20px;
-  font-size: 15px;
-  font-weight: 600;
-  box-shadow: 0 4px 15px rgba(217, 119, 6, 0.4);
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.4), 0 4px 15px rgba(0,0,0,0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  animation: fadeInUp 0.6s ease-out;
+  gap: 12px;
+  border: 1px solid rgba(255, 80, 80, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.exam-banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+  animation: shimmer 2.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+@keyframes bannerShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.banner-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 
 .live-dot {
@@ -642,13 +672,51 @@
   background: #ff4757;
   border-radius: 50%;
   flex-shrink: 0;
-  animation: blink 1.2s infinite;
-  box-shadow: 0 0 6px rgba(255, 71, 87, 0.8);
+  animation: blink 1s infinite;
+  box-shadow: 0 0 8px rgba(255, 71, 87, 1), 0 0 16px rgba(255, 71, 87, 0.6);
+}
+
+.live-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #ff6b6b;
+  text-transform: uppercase;
+}
+
+.banner-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.banner-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ffaaaa;
+}
+
+.banner-exam-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255,100,100,0.6);
+}
+
+.banner-countdown {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffd0d0;
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.2; transform: scale(0.8); }
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 8px rgba(255,71,87,1); }
+  50% { opacity: 0.3; transform: scale(0.7); box-shadow: none; }
 }
     }
   </style>
@@ -656,8 +724,15 @@
 <body onload="initializeCalendar()">
   <div class="header">এক্সাম কবে?</div>
   <div class="exam-banner" id="examBanner" style="display:none;">
-  <div class="live-dot"></div>
-  <span id="bannerText">Loading...</span>
+  <div class="banner-left">
+    <div class="live-dot"></div>
+    <div class="live-label">Live</div>
+  </div>
+  <div class="banner-body">
+    <div class="banner-title">⚠️ Next Exam</div>
+    <div class="banner-exam-name" id="bannerExamName">—</div>
+    <div class="banner-countdown" id="bannerCountdown">—</div>
+  </div>
 </div>
   <button class="admin-toggle" onclick="toggleAdmin()">Edit</button>
 
@@ -1046,7 +1121,7 @@
 today.setHours(0, 0, 0, 0);
 const examDate = new Date(exam.date + 'T00:00:00');
 const diffMs = examDate - today;
-const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))- 1;
 
 let daysLabel = '';
 let daysColor = '';
@@ -1056,8 +1131,11 @@ if (diffDays === 0) {
 } else if (diffDays < 0) {
   daysLabel = `✅ Exam was ${Math.abs(diffDays)} day${Math.abs(diffDays) > 1 ? 's' : ''} ago`;
   daysColor = '#718096';
+} else if (diffDays === 1) {
+  daysLabel = '⚠️ The exam is tomorrow!';
+  daysColor = '#dd6b20';
 } else if (diffDays <= 3) {
-  daysLabel = `⚠️ ${diffDays} day${diffDays > 1 ? 's' : ''} left!`;
+  daysLabel = `⚠️ ${diffDays} days left!`;
   daysColor = '#dd6b20';
 } else {
   daysLabel = `🗓️ ${diffDays} days left for the exam`;
@@ -1170,8 +1248,9 @@ function updateBanner() {
     countdownText = `${minutes}m ${seconds}s`;
   }
 
-  bannerText.textContent = `Next Exam: ${next.title} — ${countdownText}`;
-  banner.style.display = "flex";
+  document.getElementById("bannerExamName").textContent = next.title;
+document.getElementById("bannerCountdown").textContent = `⏳ ${countdownText} remaining`;
+banner.style.display = "flex";
 }
 
 function startBanner() {
