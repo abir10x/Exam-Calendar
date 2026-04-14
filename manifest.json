@@ -1,0 +1,14 @@
+{
+  "name": "এক্সাম কবে?",
+  "short_name": "Exam",
+  "icons": [
+    {
+      "src": "android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "display": "standalone",
+  "background_color": "#134e4a",
+  "theme_color": "#0d9488"
+}
