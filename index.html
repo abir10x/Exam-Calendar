@@ -1006,12 +1006,35 @@
           chaptersHTML = `<div class="modal-exam-chapter">${exam.syllabus}</div>`;
         }
 
-        examDiv.innerHTML = `
-          <div class="modal-exam-title">${exam.title}</div>
-          <div class="modal-exam-date">${formattedDate}</div>
-          <div style="font-size:13px; font-weight:600; color:#4a5568; margin-bottom:4px;">Syllabus:</div>
-          ${chaptersHTML}
-        `;
+        const today = new Date();
+today.setHours(0, 0, 0, 0);
+const examDate = new Date(exam.date + 'T00:00:00');
+const diffMs = examDate - today;
+const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+let daysLabel = '';
+let daysColor = '';
+if (diffDays === 0) {
+  daysLabel = '🔴 Exam is TODAY!';
+  daysColor = '#e53e3e';
+} else if (diffDays < 0) {
+  daysLabel = `✅ Exam was ${Math.abs(diffDays)} day${Math.abs(diffDays) > 1 ? 's' : ''} ago`;
+  daysColor = '#718096';
+} else if (diffDays <= 3) {
+  daysLabel = `⚠️ ${diffDays} day${diffDays > 1 ? 's' : ''} left!`;
+  daysColor = '#dd6b20';
+} else {
+  daysLabel = `🗓️ ${diffDays} days left for the exam`;
+  daysColor = '#0d9488';
+}
+
+examDiv.innerHTML = `
+  <div class="modal-exam-title">${exam.title}</div>
+  <div class="modal-exam-date">${formattedDate}</div>
+  <div style="font-size:14px; font-weight:700; color:${daysColor}; margin:8px 0 12px 0;">${daysLabel}</div>
+  <div style="font-size:13px; font-weight:600; color:#4a5568; margin-bottom:4px;">Syllabus:</div>
+  ${chaptersHTML}
+`;
         modalExamsList.appendChild(examDiv);
       });
 
