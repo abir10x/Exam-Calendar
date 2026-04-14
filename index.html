@@ -619,11 +619,46 @@
         top: 1px;
         right: 1px;
       }
+      .exam-banner {
+  background: linear-gradient(135deg, #92400e 0%, #d97706 100%);
+  color: white;
+  text-align: center;
+  padding: 12px 20px;
+  border-radius: 15px;
+  margin-bottom: 20px;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(217, 119, 6, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.live-dot {
+  width: 10px;
+  height: 10px;
+  background: #ff4757;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: blink 1.2s infinite;
+  box-shadow: 0 0 6px rgba(255, 71, 87, 0.8);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(0.8); }
+}
     }
   </style>
 </head>
 <body onload="initializeCalendar()">
   <div class="header">এক্সাম কবে?</div>
+  <div class="exam-banner" id="examBanner" style="display:none;">
+  <div class="live-dot"></div>
+  <span id="bannerText">Loading...</span>
+</div>
   <button class="admin-toggle" onclick="toggleAdmin()">Edit</button>
 
   <div class="calendar-container">
@@ -730,6 +765,7 @@
     function initializeCalendar() {
       renderCalendar();
       renderExamList();
+      startBanner();
       // Initialize Firebase after DOM is ready
       initializeFirebase();
     }
@@ -1089,6 +1125,60 @@ examDiv.innerHTML = `
         closeModal();
       }
     }
+    let bannerInterval = null;
+
+function updateBanner() {
+  if (Object.keys(exams).length === 0) return;
+
+  const now = new Date();
+  const banner = document.getElementById("examBanner");
+  const bannerText = document.getElementById("bannerText");
+
+  // Collect all upcoming exams
+  const upcoming = [];
+  for (const date in exams) {
+    // Target: 8:00 AM Dhaka time (UTC+6)
+    const examDeadline = new Date(date + 'T08:00:00+06:00');
+    if (examDeadline > now) {
+      exams[date].forEach(exam => {
+        upcoming.push({ ...exam, deadline: examDeadline });
+      });
+    }
+  }
+
+  if (upcoming.length === 0) {
+    banner.style.display = "none";
+    return;
+  }
+
+  // Sort and pick the nearest exam
+  upcoming.sort((a, b) => a.deadline - b.deadline);
+  const next = upcoming[0];
+
+  const diff = next.deadline - now;
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+  let countdownText = '';
+  if (days > 0) {
+    countdownText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  } else if (hours > 0) {
+    countdownText = `${hours}h ${minutes}m ${seconds}s`;
+  } else {
+    countdownText = `${minutes}m ${seconds}s`;
+  }
+
+  bannerText.textContent = `Next Exam: ${next.title} — ${countdownText}`;
+  banner.style.display = "flex";
+}
+
+function startBanner() {
+  updateBanner();
+  if (bannerInterval) clearInterval(bannerInterval);
+  bannerInterval = setInterval(updateBanner, 1000);
+}
   </script>
 </body>
 </html>
