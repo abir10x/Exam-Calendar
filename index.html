@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>AE-48 Exam Calendar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Hind+Siliguri:wght@700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -14,7 +14,7 @@
     
     body { 
       font-family: 'Poppins', sans-serif; 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #134e4a 0%, #0d9488 100%);
       background-attachment: fixed;
       margin: 0; 
       padding: 20px; 
@@ -30,19 +30,20 @@
       width: 100%;
       height: 100%;
       background: 
-        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+        radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.35) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(52, 211, 153, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(110, 231, 183, 0.2) 0%, transparent 50%);
       pointer-events: none;
       z-index: -1;
     }
     
     .header { 
       text-align: center; 
-      font-size: 32px; 
+      font-size: 36px; 
       margin-bottom: 30px; 
       color: #fff;
       font-weight: 700;
+      font-family: 'Hind Siliguri', sans-serif;
       text-shadow: 0 4px 20px rgba(0,0,0,0.3);
       animation: slideInDown 0.8s ease-out;
     }
@@ -527,6 +528,50 @@
       line-height: 1.6;
     }
     
+    .syllabus-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin: 8px 0;
+    }
+    .syllabus-row input {
+      margin: 0;
+      flex: 1;
+    }
+    .syllabus-row .chapter-input { flex: 2; }
+    .syllabus-row .link-input { flex: 2; }
+    .syllabus-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #4a5568;
+      margin: 12px 0 4px 0;
+    }
+    .field-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #4a5568;
+      margin: 12px 0 2px 0;
+    }
+    .modal-exam-date {
+      font-size: 15px;
+      color: #4a5568;
+      margin-bottom: 8px;
+    }
+    .modal-exam-chapter {
+      font-size: 14px;
+      color: #4a5568;
+      line-height: 2;
+    }
+    .modal-exam-chapter a {
+      color: #0d9488;
+      font-weight: 600;
+      text-decoration: none;
+      margin-left: 6px;
+    }
+    .modal-exam-chapter a:hover {
+      text-decoration: underline;
+    }
+
     @media (max-width: 600px) { 
       .calendar { 
         font-size: 12px; 
@@ -575,7 +620,7 @@
   </style>
 </head>
 <body onload="initializeCalendar()">
-  <div class="header">AE-48 Exam Calendar</div>
+  <div class="header">এক্সাম কবে?</div>
   <button class="admin-toggle" onclick="toggleAdmin()">Edit</button>
 
   <div class="calendar-container">
@@ -589,9 +634,23 @@
 
   <div class="admin-panel" id="adminPanel" style="display:none;">
     <h3>Admin Panel - Manage Exams</h3>
+    <div class="field-label">CT Title</div>
+    <input type="text" id="examTitle" placeholder="Write exam title here">
+    <div class="field-label">CT Date</div>
     <input type="date" id="examDate">
-    <input type="text" id="examTitle" placeholder="Exam Title">
-    <textarea id="examSyllabus" placeholder="Syllabus"></textarea>
+    <div class="syllabus-label">Syllabus</div>
+    <div class="syllabus-row">
+      <input class="chapter-input" type="text" id="chapter1" placeholder="Chapter 1 name">
+      <input class="link-input" type="url" id="link1" placeholder="Paste Drive link (optional)">
+    </div>
+    <div class="syllabus-row">
+      <input class="chapter-input" type="text" id="chapter2" placeholder="Chapter 2 name">
+      <input class="link-input" type="url" id="link2" placeholder="Paste Drive link (optional)">
+    </div>
+    <div class="syllabus-row">
+      <input class="chapter-input" type="text" id="chapter3" placeholder="Chapter 3 name">
+      <input class="link-input" type="url" id="link3" placeholder="Paste Drive link (optional)">
+    </div>
     <button class="add-btn" id="formButton" onclick="handleFormSubmit()">Add Exam</button>
     <button class="logout-btn" onclick="logout()">Logout</button>
 
@@ -720,9 +779,15 @@
     function handleFormSubmit() {
       const date = document.getElementById("examDate").value;
       const title = document.getElementById("examTitle").value;
-      const syllabus = document.getElementById("examSyllabus").value;
-      if (!date || !title || !syllabus) { 
-        alert("Fill all fields."); 
+      const chapter1 = document.getElementById("chapter1").value.trim();
+      const chapter2 = document.getElementById("chapter2").value.trim();
+      const chapter3 = document.getElementById("chapter3").value.trim();
+      const link1 = document.getElementById("link1").value.trim();
+      const link2 = document.getElementById("link2").value.trim();
+      const link3 = document.getElementById("link3").value.trim();
+
+      if (!date || !title || !chapter1) { 
+        alert("Please fill CT Title, CT Date, and at least Chapter 1."); 
         return; 
       }
 
@@ -731,25 +796,23 @@
         return;
       }
 
-      const examData = { date, title, syllabus };
+      const chapters = [];
+      if (chapter1) chapters.push({ name: chapter1, link: link1 });
+      if (chapter2) chapters.push({ name: chapter2, link: link2 });
+      if (chapter3) chapters.push({ name: chapter3, link: link3 });
+
+      const examData = { date, title, chapters };
 
       if (editingExamId) {
-        // Update existing exam
         db.collection("exams").doc(editingExamId).update(examData).then(() => {
-          document.getElementById("examDate").value = '';
-          document.getElementById("examTitle").value = '';
-          document.getElementById("examSyllabus").value = '';
           alert("Exam updated successfully!");
           resetForm();
         }).catch(err => alert(err.message));
       } else {
-        // Add new exam with generated ID
         const examId = generateExamId();
         db.collection("exams").doc(examId).set(examData).then(() => {
-          document.getElementById("examDate").value = '';
-          document.getElementById("examTitle").value = '';
-          document.getElementById("examSyllabus").value = '';
           alert("Exam added successfully!");
+          resetForm();
         }).catch(err => alert(err.message));
       }
     }
@@ -770,7 +833,14 @@
       editingExamId = examId;
       document.getElementById("examDate").value = examToEdit.date;
       document.getElementById("examTitle").value = examToEdit.title;
-      document.getElementById("examSyllabus").value = examToEdit.syllabus;
+
+      // Populate chapter/link fields
+      const chapters = examToEdit.chapters || [];
+      for (let i = 0; i < 3; i++) {
+        document.getElementById(`chapter${i+1}`).value = chapters[i] ? chapters[i].name : '';
+        document.getElementById(`link${i+1}`).value = chapters[i] ? chapters[i].link : '';
+      }
+
       const formButton = document.getElementById("formButton");
       formButton.innerText = "Update Exam";
     }
@@ -781,7 +851,10 @@
       formButton.innerText = "Add Exam";
       document.getElementById("examDate").value = '';
       document.getElementById("examTitle").value = '';
-      document.getElementById("examSyllabus").value = '';
+      for (let i = 1; i <= 3; i++) {
+        document.getElementById(`chapter${i}`).value = '';
+        document.getElementById(`link${i}`).value = '';
+      }
     }
 
     function deleteExam(examId) {
@@ -817,9 +890,21 @@
       monthExams.forEach(exam => {
         const div = document.createElement("div");
         div.className = "exam-item";
+
+        // Build syllabus display - support both old (syllabus string) and new (chapters array)
+        let syllabusHTML = '';
+        if (exam.chapters && exam.chapters.length > 0) {
+          syllabusHTML = exam.chapters.map(ch => {
+            const linkPart = ch.link ? ` — <a href="${ch.link}" target="_blank" style="color:#0d9488;">Pdf file</a>` : '';
+            return `${ch.name}${linkPart}`;
+          }).join('<br>');
+        } else if (exam.syllabus) {
+          syllabusHTML = exam.syllabus;
+        }
+
         div.innerHTML = `
           <b>${exam.date}:</b> ${exam.title}<br>
-          <small>Syllabus: ${exam.syllabus}</small><br>
+          <small>Syllabus:<br>${syllabusHTML}</small><br>
           <button class="edit-btn" onclick="editExam('${exam.id}')">Edit</button>
           <button class="delete-btn" onclick="deleteExam('${exam.id}')">Delete</button>
         `;
@@ -900,9 +985,29 @@
       dayExams.forEach(exam => {
         const examDiv = document.createElement("div");
         examDiv.className = "modal-exam-item";
+
+        // Format date: dd month name year
+        const dateObj = new Date(exam.date + 'T00:00:00');
+        const formattedDate = `${dateObj.getDate()} ${dateObj.toLocaleString('en-US', { month: 'long' })} ${dateObj.getFullYear()}`;
+
+        // Build chapters HTML - support both old and new structure
+        let chaptersHTML = '';
+        if (exam.chapters && exam.chapters.length > 0) {
+          chaptersHTML = exam.chapters.map(ch => {
+            const pdfLink = ch.link 
+              ? ` : <a href="${ch.link}" target="_blank">Pdf file</a>` 
+              : '';
+            return `<div class="modal-exam-chapter">${ch.name}${pdfLink}</div>`;
+          }).join('');
+        } else if (exam.syllabus) {
+          chaptersHTML = `<div class="modal-exam-chapter">${exam.syllabus}</div>`;
+        }
+
         examDiv.innerHTML = `
           <div class="modal-exam-title">${exam.title}</div>
-          <div class="modal-exam-syllabus">${exam.syllabus}</div>
+          <div class="modal-exam-date">${formattedDate}</div>
+          <div style="font-size:13px; font-weight:600; color:#4a5568; margin-bottom:4px;">Syllabus:</div>
+          ${chaptersHTML}
         `;
         modalExamsList.appendChild(examDiv);
       });
@@ -961,4 +1066,3 @@
   </script>
 </body>
 </html>
-
