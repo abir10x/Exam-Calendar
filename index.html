@@ -1122,7 +1122,7 @@
 today.setHours(0, 0, 0, 0);
 const examDate = new Date(exam.date + 'T00:00:00');
 const diffMs = examDate - today;
-const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))- 1;
+const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
 let daysLabel = '';
 let daysColor = '';
