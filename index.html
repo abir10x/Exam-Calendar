@@ -1122,27 +1122,26 @@
 today.setHours(0, 0, 0, 0);
 const examDate = new Date(exam.date + 'T00:00:00');
 const diffMs = examDate - today;
-const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24)) - 1;
 
 let daysLabel = '';
 let daysColor = '';
-if (diffDays === 0) {
+if (diffDays === -1) {
   daysLabel = '🔴 Exam is TODAY!';
   daysColor = '#e53e3e';
-} else if (diffDays < 0) {
-  daysLabel = `✅ Exam was ${Math.abs(diffDays)} day${Math.abs(diffDays) > 1 ? 's' : ''} ago`;
+} else if (diffDays < -1) {
+  daysLabel = `✅ Exam was ${Math.abs(diffDays + 1)} day${Math.abs(diffDays + 1) > 1 ? 's' : ''} ago`;
   daysColor = '#718096';
-} else if (diffDays === 1) {
+} else if (diffDays === 0) {
   daysLabel = '⚠️ The exam is tomorrow!';
   daysColor = '#dd6b20';
-} else if (diffDays <= 3) {
+} else if (diffDays <= 2) {
   daysLabel = `⚠️ ${diffDays} days left!`;
   daysColor = '#dd6b20';
 } else {
   daysLabel = `🗓️ ${diffDays} days left for the exam`;
   daysColor = '#0d9488';
 }
-
 examDiv.innerHTML = `
   <div class="modal-exam-title">${exam.title}</div>
   <div class="modal-exam-date">${formattedDate}</div>
