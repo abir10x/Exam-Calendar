@@ -1010,7 +1010,7 @@
         let syllabusHTML = '';
         if (exam.chapters && exam.chapters.length > 0) {
           syllabusHTML = exam.chapters.map(ch => {
-            const linkPart = ch.link ? ` — <a href="${ch.link}" target="_blank" style="color:#0d9488;">Pdf file</a>` : '';
+            const linkPart = ch.link ? ` — <a href="${ch.link}" target="_blank" style="color:#0d9488;">Click here</a>` : '';
             return `${ch.name}${linkPart}`;
           }).join('<br>');
         } else if (exam.syllabus) {
@@ -1110,7 +1110,7 @@
         if (exam.chapters && exam.chapters.length > 0) {
           chaptersHTML = exam.chapters.map(ch => {
             const pdfLink = ch.link 
-              ? ` : <a href="${ch.link}" target="_blank">Pdf file</a>` 
+              ? ` : <a href="${ch.link}" target="_blank">Click here</a>` 
               : '';
             return `<div class="modal-exam-chapter">${ch.name}${pdfLink}</div>`;
           }).join('');
